@@ -196,7 +196,7 @@ impl<T: Environment + Clone> Mcts<T> {
             .lock()
             .unwrap()
             .children
-            .extend((index..index + self.action_space).collect::<Vec<usize>>());
+            .extend(index..index + self.action_space);
 
         history.push(index);
         history
