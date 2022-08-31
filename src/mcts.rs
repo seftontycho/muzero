@@ -85,6 +85,8 @@ impl<T: Environment + Clone> Mcts<T> {
         let arena = self.arena.lock().unwrap();
         let offset = (history.len() + 1) % 2;
 
+        //only update for the player which has won.
+        //suggested from https://jyopari.github.io/MCTS.html
         for i in history.iter().skip(offset).step_by(2) {
             let mut node = arena[*i].lock().unwrap();
             node.n_visits += 1.0;
