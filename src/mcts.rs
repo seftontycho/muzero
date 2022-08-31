@@ -1,6 +1,6 @@
 use crate::envs::Environment;
 use rand::prelude::*;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::sync::{Arc, Mutex};
 
 pub struct MCTSNode {
@@ -14,7 +14,7 @@ impl Display for MCTSNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "action: {:?}, n_visits: {}, q_value: {}, win_pct: {:.3}",
+            "action: {:?}, n_visits: {}, q_value: {:.3}, win_pct: {:.3}",
             self.action,
             self.n_visits,
             self.q_value,
@@ -41,13 +41,13 @@ impl MCTSNode {
     }
 }
 
-pub struct Mcts<T: Environment + Clone> {
+pub struct Mcts<T: Environment + Clone + Debug> {
     pub arena: Arc<Mutex<Vec<Mutex<MCTSNode>>>>,
     action_space: usize,
     env: T,
 }
 
-impl<T: Environment + Clone> Display for Mcts<T> {
+impl<T: Environment + Clone + Debug> Display for Mcts<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Mcts {{").unwrap();
         writeln!(f, "    arena: {{").unwrap();
@@ -61,7 +61,7 @@ impl<T: Environment + Clone> Display for Mcts<T> {
     }
 }
 
-impl<T: Environment + Clone> Mcts<T> {
+impl<T: Environment + Clone + Debug> Mcts<T> {
     pub fn new(env: T) -> Self {
         let arena = Arc::new(Mutex::new(Vec::new()));
         let mut a = arena.lock().unwrap();
@@ -76,12 +76,10 @@ impl<T: Environment + Clone> Mcts<T> {
         }
     }
 
-    pub fn search(&self, root_index: usize, n_rollouts: f64) -> usize {
+    pub fn search(&self, root_index: usize, n_rollouts: f64) {
         let history = self.select_leaf(root_index);
         let result = self.rollout(&history, n_rollouts);
-        let last = *history.last().unwrap();
         self.backpropagate(&history, result);
-        last
     }
 
     fn backpropagate(&self, history: &[usize], result: f64) {
@@ -130,8 +128,6 @@ impl<T: Environment + Clone> Mcts<T> {
         if env.is_none() {
             return total_reward;
         }
-
-        println!("hello");
 
         let mut env = env.unwrap();
         let mut rng = thread_rng();

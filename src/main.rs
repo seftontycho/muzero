@@ -7,12 +7,9 @@ fn main() {
     let t = TicTacToeEnv::new();
     let m = Mcts::new(t);
 
-    println!("{}", m);
-
     for _ in 0..1_000_000 {
-        let _ = m.search(0, 10.0);
+        m.search(0, 1000.0);
     }
 
     println!("{}", m);
-    println!("{}", m.arena.lock().unwrap().len());
 }

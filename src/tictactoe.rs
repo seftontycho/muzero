@@ -32,26 +32,19 @@ impl TicTacToeEnv {
     //6, 7, 8
 
     fn check_win(&self) -> f64 {
-        for i in 0..3 {
-            if self.board[i] == self.board[i + 3] && self.board[i] == self.board[i + 6] {
-                return 1.0;
-            }
-            if self.board[i] == self.board[i + 1] && self.board[i] == self.board[i + 2] {
-                return 1.0;
-            }
-        }
+        let rows = (0..3).any(|i| self.board.iter().skip(i).take(3).all(|x| *x == self.player));
+        let cols = (0..3).any(|i| {
+            self.board[3 * i..3 * (i + 1)]
+                .iter()
+                .all(|x| *x == self.player)
+        });
+        let diag = (0..3).all(|i| self.board[4 * i] == self.player);
 
-        if self.board[0] == self.board[4] && self.board[0] == self.board[8] {
-            return 1.0;
+        if rows || cols || diag {
+            1.0
+        } else {
+            0.0
         }
-        if self.board[2] == self.board[4] && self.board[2] == self.board[6] {
-            return 1.0;
-        }
-        0.0
-    }
-
-    fn check_draw(&self) -> bool {
-        (0..9).any(|i| self.board[i] == 0)
     }
 }
 
@@ -77,7 +70,12 @@ impl Environment for TicTacToeEnv {
         self.board[action as usize] = self.player;
         let reward = self.check_win();
         self.player *= -1;
-        let done = (reward != 0.0) || self.check_draw();
+
+        let draw = self.board.iter().all(|i| *i != 0);
+        let won = reward > 0.0001;
+
+        let done = won || draw;
+
         (
             action,
             TicTacToeObservation { board: self.board },
