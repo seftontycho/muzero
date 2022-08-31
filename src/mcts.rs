@@ -14,8 +14,11 @@ impl Display for MCTSNode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "action: {:?}, n_visits: {}, q_value: {}",
-            self.action, self.n_visits, self.q_value
+            "action: {:?}, n_visits: {}, q_value: {}, win_pct: {:.3}",
+            self.action,
+            self.n_visits,
+            self.q_value,
+            100.0 * self.q_value / self.n_visits
         )
     }
 }
