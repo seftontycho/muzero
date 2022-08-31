@@ -85,12 +85,16 @@ impl<T: Environment + Clone> Mcts<T> {
         let arena = self.arena.lock().unwrap();
         let offset = (history.len() + 1) % 2;
 
-        //only update for the player which has won.
-        //suggested from https://jyopari.github.io/MCTS.html
-        for i in history.iter().skip(offset).step_by(2) {
+        //only update q_value for the player which has won.
+        //suggested by https://jyopari.github.io/MCTS.html
+
+        for i in history.iter() {
             let mut node = arena[*i].lock().unwrap();
             node.n_visits += 1.0;
-            node.q_value += result;
+
+            if node.n_visits % 2.0 == offset as f64 {
+                node.q_value += result;
+            }
         }
     }
 
@@ -119,9 +123,13 @@ impl<T: Environment + Clone> Mcts<T> {
 
     fn rollout(&self, history: &[usize], n: f64) -> f64 {
         let (env, mut total_reward) = self.follow_trajectory(history);
+
         if env.is_none() {
             return total_reward;
         }
+
+        println!("hello");
+
         let mut env = env.unwrap();
         let mut rng = thread_rng();
 

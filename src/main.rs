@@ -10,7 +10,7 @@ fn main() {
     println!("{}", m);
 
     for _ in 0..1_000_000 {
-        let _ = m.search(0, 1.0);
+        let _ = m.search(0, 10.0);
     }
 
     println!("{}", m);

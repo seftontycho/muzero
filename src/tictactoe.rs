@@ -4,7 +4,7 @@ use tch::{Device, Tensor};
 
 #[derive(Clone, Debug)]
 pub struct TicTacToeObservation {
-    board: [i64; 9],
+    pub board: [i64; 9],
 }
 
 impl Tensorable for TicTacToeObservation {
@@ -51,12 +51,7 @@ impl TicTacToeEnv {
     }
 
     fn check_draw(&self) -> bool {
-        for i in 0..9 {
-            if self.board[i] == 0 {
-                return false;
-            }
-        }
-        true
+        (0..9).any(|i| self.board[i] == 0)
     }
 }
 
@@ -70,7 +65,7 @@ impl Environment for TicTacToeEnv {
     }
 
     fn step(&mut self, action: usize) -> (usize, Self::Observation, f64, bool) {
-        if self.board[action as usize] != 0 {
+        if self.board[action] != 0 {
             return (
                 action,
                 TicTacToeObservation { board: self.board },
