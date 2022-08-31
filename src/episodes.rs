@@ -29,8 +29,8 @@ impl<T> Episode<T>
 where
     T: Tensorable + Clone,
 {
-    pub fn new() -> Self {
-        Episode {
+    pub const fn new() -> Self {
+        Self {
             steps: Vec::new(),
             size: 0,
         }
@@ -57,7 +57,7 @@ where
     pub fn new(capacity: usize, model_name: String) -> Self {
         EpisodeQueue {
             episodes: BoundedVecDeque::new(capacity),
-            model_name: model_name,
+            model_name,
         }
     }
 
@@ -69,7 +69,7 @@ where
         let mut size = 0i64;
 
         for episode in self.episodes.iter() {
-            for _ in episode.steps.iter() {
+            for _ in &episode.steps {
                 size += 1;
             }
         }
@@ -80,7 +80,7 @@ where
         let mut rewards: Vec<Tensor> = Vec::new();
 
         for episode in self.episodes.iter() {
-            for step in episode.steps.iter() {
+            for step in &episode.steps {
                 actions.push(Tensor::try_from(step.action).unwrap());
                 observation1s.push(step.observation1.to_tensor());
                 observation2s.push(step.observation2.to_tensor());
@@ -94,8 +94,8 @@ where
             observation1s: Tensor::concat(&observation1s, 0).to_device(device),
             observation2s: Tensor::concat(&observation2s, 0).to_device(device),
             rewards: Tensor::concat(&rewards, 0).to_device(device),
-            batch_size: batch_size,
-            device: device,
+            batch_size,
+            device,
             total_size: size,
             batch_index: 0,
         }

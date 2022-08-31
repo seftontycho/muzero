@@ -4,9 +4,9 @@ use std::fmt::Display;
 use std::sync::{Arc, Mutex};
 
 pub struct MCTSNode {
-    pub action: Option<i64>,
+    pub action: Option<usize>,
     pub children: Vec<usize>,
-    pub n_visits: i64,
+    pub n_visits: f64,
     pub q_value: f64,
 }
 
@@ -21,38 +21,36 @@ impl Display for MCTSNode {
 }
 
 impl MCTSNode {
-    pub fn new(action: Option<i64>) -> Self {
+    pub const fn new(action: Option<usize>) -> Self {
         Self {
             action,
             children: Vec::new(),
-            n_visits: 0,
+            n_visits: 0.0,
             q_value: 0.0,
         }
     }
 
-    pub fn ucb_score(&self, parent_n_visits: i64) -> f64 {
-        if self.n_visits == 0 {
+    pub fn ucb_score(&self, parent_n_visits: f64) -> f64 {
+        if self.n_visits == 0.0 {
             return std::f64::MAX;
         }
-        (self.q_value / self.n_visits as f64)
-            + (2.0 * (parent_n_visits as f64).ln() / (self.n_visits as f64)).sqrt()
+        (self.q_value / self.n_visits) + (2.0 * (parent_n_visits).ln() / (self.n_visits)).sqrt()
     }
 }
 
-pub struct MCTS<T: Environment + Clone> {
+pub struct Mcts<T: Environment + Clone> {
     pub arena: Arc<Mutex<Vec<Mutex<MCTSNode>>>>,
-    action_space: i64,
+    action_space: usize,
     env: T,
 }
 
-impl<T: Environment + Clone> Display for MCTS<T> {
+impl<T: Environment + Clone> Display for Mcts<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "MCTS {{").unwrap();
+        writeln!(f, "Mcts {{").unwrap();
         writeln!(f, "    arena: {{").unwrap();
-        for (i, node) in self.arena.lock().unwrap().iter().enumerate() {
-            if i >= 10 {
-                break;
-            }
+
+        let arena = self.arena.lock().unwrap();
+        for (i, node) in arena.iter().take(10).enumerate() {
             writeln!(f, "        {}: {},", i, node.lock().unwrap()).unwrap();
         }
         writeln!(f, "    }},").unwrap();
@@ -60,7 +58,7 @@ impl<T: Environment + Clone> Display for MCTS<T> {
     }
 }
 
-impl<T: Environment + Clone> MCTS<T> {
+impl<T: Environment + Clone> Mcts<T> {
     pub fn new(env: T) -> Self {
         let arena = Arc::new(Mutex::new(Vec::new()));
         let mut a = arena.lock().unwrap();
@@ -75,21 +73,21 @@ impl<T: Environment + Clone> MCTS<T> {
         }
     }
 
-    pub fn search(&self, root_index: usize, n_rollouts: u64) -> usize {
+    pub fn search(&self, root_index: usize, n_rollouts: f64) -> usize {
         let history = self.select_leaf(root_index);
         let result = self.rollout(&history, n_rollouts);
         let last = *history.last().unwrap();
-        self.backpropagate(history, result);
+        self.backpropagate(&history, result);
         last
     }
 
-    fn backpropagate(&self, history: Vec<usize>, result: f64) {
+    fn backpropagate(&self, history: &[usize], result: f64) {
         let arena = self.arena.lock().unwrap();
         let offset = (history.len() + 1) % 2;
 
         for i in history.iter().skip(offset).step_by(2) {
             let mut node = arena[*i].lock().unwrap();
-            node.n_visits += 1;
+            node.n_visits += 1.0;
             node.q_value += result;
         }
     }
@@ -98,7 +96,7 @@ impl<T: Environment + Clone> MCTS<T> {
         let mut env = self.env.clone();
         let arena = self.arena.lock().unwrap();
 
-        let action_history: Vec<i64> = history[1..]
+        let action_history: Vec<usize> = history[1..]
             .iter()
             .map(|&i| arena[i].lock().unwrap().action.unwrap())
             .collect();
@@ -117,7 +115,7 @@ impl<T: Environment + Clone> MCTS<T> {
         (Some(env), total_reward)
     }
 
-    fn rollout(&self, history: &[usize], n: u64) -> f64 {
+    fn rollout(&self, history: &[usize], n: f64) -> f64 {
         let (env, mut total_reward) = self.follow_trajectory(history);
         if env.is_none() {
             return total_reward;
@@ -125,7 +123,7 @@ impl<T: Environment + Clone> MCTS<T> {
         let mut env = env.unwrap();
         let mut rng = thread_rng();
 
-        for _ in 0..n {
+        for _ in 0..n as usize {
             loop {
                 let action = rng.gen_range(0..self.action_space);
                 let (_, _, reward, done) = env.step(action);
@@ -136,7 +134,7 @@ impl<T: Environment + Clone> MCTS<T> {
             }
         }
 
-        total_reward / n as f64
+        total_reward / n
     }
 
     fn select_leaf(&self, root_index: usize) -> Vec<usize> {
@@ -171,7 +169,7 @@ impl<T: Environment + Clone> MCTS<T> {
 
         history.push(current_index);
 
-        if current_node.n_visits <= 0 {
+        if current_node.n_visits <= 0.0 {
             return history;
         }
 
@@ -196,7 +194,7 @@ impl<T: Environment + Clone> MCTS<T> {
             .lock()
             .unwrap()
             .children
-            .extend((index..index + self.action_space as usize).collect::<Vec<usize>>());
+            .extend((index..index + self.action_space).collect::<Vec<usize>>());
 
         history.push(index);
         history
