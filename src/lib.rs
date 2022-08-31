@@ -1,4 +1,4 @@
-mod envs;
-mod episodes;
-mod mcts;
-mod tictactoe;
+pub mod envs;
+pub mod episodes;
+pub mod mcts;
+pub mod tictactoe;

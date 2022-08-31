@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 
-use mcts::Mcts;
-use tictactoe::TicTacToeEnv;
+use muzero::mcts::Mcts;
+use muzero::tictactoe::TicTacToeEnv;
 
 fn main() {
     let t = TicTacToeEnv::new();
