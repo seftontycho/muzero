@@ -3,11 +3,6 @@
 use mcts::Mcts;
 use tictactoe::TicTacToeEnv;
 
-mod envs;
-mod episodes;
-mod mcts;
-mod tictactoe;
-
 fn main() {
     let t = TicTacToeEnv::new();
     let m = Mcts::new(t);
