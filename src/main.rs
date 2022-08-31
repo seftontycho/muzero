@@ -1,12 +1,4 @@
-#![warn(
-    clippy::all,
-    clippy::pedantic,
-    clippy::nursery,
-    clippy::complexity,
-    clippy::perf,
-    clippy::style,
-    clippy::cognitive_complexity
-)]
+#![warn(clippy::pedantic, clippy::nursery)]
 
 use mcts::Mcts;
 use tictactoe::TicTacToeEnv;
